@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Échafaudage v5 — Plan complet</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+  :root {
+    --ga:#5cb85c; --gl:#a8d5a2; --cream:#f5f0e8;
+    --bg:#080e08; --panel:#0f1a0f;
+    --m1:#e05050; --m2:#4a90d9; --m3:#f0a030;
+    --mi:#40d9b0; --steel:#aabbcc;
+    --wood:#c8a050;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--cream); font-family:'Syne',sans-serif; overflow:hidden; height:100vh; }
+  .layout { display:flex; flex-direction:column; height:100vh; }
+
+  /* ── HEADER ── */
+  .hdr { display:flex; align-items:center; justify-content:space-between; padding:8px 24px; background:var(--panel); border-bottom:1px solid #2d6a2d44; height:46px; flex-shrink:0; }
+  .hdr-title { font-family:'Space Mono',monospace; font-size:11px; color:var(--ga); letter-spacing:2px; }
+  .hdr-sub   { font-size:10px; color:#557755; margin-top:1px; }
+
+  /* ── TABS ── */
+  .tabs { display:flex; background:#0a140a; border-bottom:1px solid #2d6a2d33; flex-shrink:0; }
+  .tab { font-family:'Space Mono',monospace; font-size:10px; letter-spacing:1px; padding:9px 18px; cursor:pointer; color:#446644; border-bottom:2px solid transparent; transition:all .15s; white-space:nowrap; }
+  .tab:hover { color:var(--gl); }
+  .tab.on { color:var(--ga); border-bottom:2px solid var(--ga); background:var(--panel); }
+
+  /* ── PAGES ── */
+  .pages { flex:1; overflow:hidden; }
+  .page  { display:none; width:100%; height:100%; }
+  .page.on { display:flex; }
+
+  /* ══ PAGE 3D ══ */
+  .app3d { display:grid; grid-template-columns:1fr 250px; height:100%; }
+  .three-wrap { position:relative; background:#040904; overflow:hidden; }
+  canvas { width:100%!important; height:100%!important; display:block; }
+  .ctrl-top    { position:absolute; top:10px; left:10px; display:flex; gap:5px; flex-wrap:wrap; max-width:72%; }
+  .ctrl-right  { position:absolute; top:10px; right:10px; display:flex; flex-direction:column; gap:4px; }
+  .ctrl-bottom { position:absolute; bottom:10px; left:10px; display:flex; flex-direction:column; gap:2px; }
+  .btn { background:#0a140acc; border:1px solid #2d6a2d55; color:var(--gl); font-family:'Space Mono',monospace; font-size:9px; padding:5px 10px; cursor:pointer; letter-spacing:1px; border-radius:2px; transition:all .15s; white-space:nowrap; }
+  .btn:hover,.btn.on { background:#2d6a2d; color:#fff; border-color:var(--ga); }
+  .btn.hi { border-color:#44668855; color:#aaccdd; }
+  .btn.hi:hover,.btn.hi.on { background:#224488; color:#fff; border-color:#4488ff; }
+  .mbtn { background:#0a140acc; border:1px solid #2d6a2d33; color:var(--gl); font-family:'Space Mono',monospace; font-size:9px; padding:6px 10px; cursor:pointer; border-radius:2px; transition:all .15s; text-align:left; display:flex; align-items:center; gap:6px; }
+  .mbtn:hover { background:#1a3a1a; }
+  .mbtn.off   { opacity:.25; border-style:dashed; }
+  .dot  { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .hint { font-family:'Space Mono',monospace; font-size:8px; color:#1a2e1a; letter-spacing:1px; }
+  .slabel { font-family:'Space Mono',monospace; font-size:8px; color:#3a5a3a; letter-spacing:2px; margin-bottom:2px; }
+
+  /* SIDE PANEL 3D */
+  .side3d { background:var(--panel); border-left:1px solid #2d6a2d22; overflow-y:auto; padding:12px 10px; display:flex; flex-direction:column; gap:8px; }
+  .side3d::-webkit-scrollbar { width:2px; }
+  .side3d::-webkit-scrollbar-thumb { background:#2d6a2d; }
+  .ptitle { font-family:'Space Mono',monospace; font-size:8px; letter-spacing:3px; color:var(--ga); text-transform:uppercase; margin-bottom:5px; }
+  .mcard { border-radius:2px; padding:8px; border:1px solid; font-size:10px; line-height:1.5; }
+  .mcard.m1 { background:#160808; border-color:#e0505022; }
+  .mcard.m2 { background:#080f16; border-color:#4a90d922; }
+  .mcard.m3 { background:#161008; border-color:#f0a03022; }
+  .mcard.mi { background:#081414; border-color:#40d9b022; }
+  .mcard.mh { background:#101418; border-color:#aabbcc22; }
+  .mcard-title { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; margin-bottom:3px; }
+  .mcard.m1 .mcard-title { color:var(--m1); }
+  .mcard.m2 .mcard-title { color:var(--m2); }
+  .mcard.m3 .mcard-title { color:var(--m3); }
+  .mcard.mi .mcard-title { color:var(--mi); }
+  .mcard.mh .mcard-title { color:var(--steel); }
+  .mcard p { color:#6a886a; }
+
+  /* ══ PAGE MATÉRIAUX ══ */
+  .page-scroll { flex-direction:column; overflow-y:auto; padding:24px 32px; gap:20px; background:var(--bg); }
+  .page-title { font-size:22px; font-weight:800; color:var(--cream); }
+  .page-title span { color:var(--ga); }
+  .page-sub { font-size:12px; color:#557755; margin-top:3px; }
+
+  .mat-section { background:#0a120a; border:1px solid #2d6a2d2a; border-radius:4px; overflow:hidden; }
+  .mat-section-hdr { display:flex; align-items:center; gap:10px; padding:12px 16px; background:#0f1a0f; border-bottom:1px solid #2d6a2d22; }
+  .mat-section-hdr h3 { font-size:13px; font-weight:700; color:var(--cream); }
+  .mat-badge { font-family:'Space Mono',monospace; font-size:8px; padding:3px 8px; border-radius:2px; letter-spacing:1px; }
+  .mat-badge.dispo { background:#2d6a2d; color:var(--gl); }
+  .mat-badge.acheter { background:#224466; color:#aaccdd; }
+  .mat-badge.acier { background:#334455; color:var(--steel); }
+
+  .mat-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .mat-table th { background:#121f12; color:var(--ga); font-family:'Space Mono',monospace; font-size:8px; letter-spacing:2px; padding:8px 14px; text-align:left; border-bottom:1px solid #2d6a2d22; }
+  .mat-table td { padding:9px 14px; border-bottom:1px solid #2d6a2d11; color:#aabbaa; vertical-align:top; }
+  .mat-table tr:last-child td { border-bottom:none; }
+  .mat-table tr:hover td { background:#0f1a0f44; }
+  .mat-table .qty { font-family:'Space Mono',monospace; color:var(--ga); font-weight:700; white-space:nowrap; }
+  .mat-table .cut { font-family:'Space Mono',monospace; font-size:10px; color:#557755; }
+  .mat-table .note { font-size:10px; color:#446644; font-style:italic; }
+  .mat-table .price { font-family:'Space Mono',monospace; color:var(--steel); white-space:nowrap; }
+  .mat-table .dispo { color:var(--ga); font-family:'Space Mono',monospace; font-size:10px; }
+
+  .budget-box { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .budget-card { background:#0f1a0f; border:1px solid #2d6a2d33; border-radius:3px; padding:16px; }
+  .budget-card h4 { font-size:12px; font-family:'Space Mono',monospace; color:var(--ga); letter-spacing:1px; margin-bottom:10px; }
+  .budget-row { display:flex; justify-content:space-between; font-size:11px; padding:4px 0; border-bottom:1px solid #2d6a2d11; color:#7a997a; }
+  .budget-row:last-child { border:none; font-weight:700; color:var(--cream); font-size:13px; margin-top:4px; padding-top:8px; border-top:1px solid #2d6a2d33; }
+  .budget-row span:last-child { font-family:'Space Mono',monospace; color:var(--ga); }
+
+  .debit-box { background:#080e08; border:1px solid #2d6a2d22; border-radius:3px; padding:14px 16px; }
+  .debit-box h4 { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:2px; color:var(--ga); margin-bottom:10px; }
+  .debit-lame { display:flex; align-items:center; gap:0; margin-bottom:6px; height:28px; }
+  .debit-label { font-family:'Space Mono',monospace; font-size:9px; color:#557755; width:70px; flex-shrink:0; }
+  .debit-seg { height:22px; display:flex; align-items:center; justify-content:center; font-family:'Space Mono',monospace; font-size:8px; border-radius:2px; }
+  .seg-bar  { background:#cc3333; color:#fff; }
+  .seg-lis  { background:#e08010; color:#fff; }
+  .seg-plan { background:#4a90d9; color:#fff; }
+  .seg-chute{ background:#2a3a2a; color:#557755; border:1px dashed #3a5a3a; }
+
+  .warn { background:#161008; border:1px solid #f0a03022; border-radius:2px; padding:10px 14px; font-size:11px; color:#c08030; line-height:1.6; }
+
+  /* ══ PAGE MONTAGE ══ */
+  .montage-wrap { flex-direction:column; overflow-y:auto; background:var(--bg); }
+  .montage-inner { padding:24px 32px; display:flex; flex-direction:column; gap:20px; }
+
+  .step-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+  .step-card { background:#0a120a; border:1px solid #2d6a2d22; border-radius:4px; overflow:hidden; }
+  .step-hdr { display:flex; align-items:center; gap:12px; padding:12px 16px; background:#0f1a0f; border-bottom:1px solid #2d6a2d22; }
+  .step-num { font-family:'Space Mono',monospace; font-size:22px; font-weight:700; color:var(--ga); line-height:1; min-width:36px; }
+  .step-hdr h3 { font-size:13px; font-weight:700; color:var(--cream); }
+  .step-hdr .step-time { font-family:'Space Mono',monospace; font-size:9px; color:#446644; margin-left:auto; }
+  .step-body { display:grid; grid-template-columns:1fr 140px; gap:0; }
+  .step-text { padding:12px 14px; }
+  .step-text ul { padding-left:14px; }
+  .step-text li { font-size:11px; color:#7a997a; line-height:1.7; margin-bottom:1px; }
+  .step-text li strong { color:var(--cream); }
+  .step-text .tools { margin-top:8px; display:flex; gap:5px; flex-wrap:wrap; }
+  .tool-tag { font-family:'Space Mono',monospace; font-size:8px; background:#1a2a1a; border:1px solid #2d6a2d33; color:#446644; padding:2px 7px; border-radius:2px; }
+  .step-svg { background:#080e08; border-left:1px solid #2d6a2d11; padding:8px; display:flex; align-items:center; justify-content:center; }
+  .step-svg svg { width:100%; height:auto; max-height:120px; }
+
+  .step-full { grid-column:1/-1; }
+  .step-full .step-body { grid-template-columns:1fr; }
+  .step-full .step-svg { border-left:none; border-top:1px solid #2d6a2d11; }
+
+  .check-row { display:flex; align-items:flex-start; gap:10px; padding:6px 0; border-bottom:1px solid #2d6a2d0a; }
+  .check-row:last-child { border:none; }
+  .check-box { width:16px; height:16px; border:1px solid #2d6a2d; border-radius:2px; flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; color:var(--ga); font-size:11px; cursor:pointer; }
+  .check-row p { font-size:11px; color:#7a997a; line-height:1.5; }
+  .check-row p strong { color:var(--cream); }
+
+  .montage-title { font-size:20px; font-weight:800; color:var(--cream); }
+  .montage-title span { color:var(--ga); }
+  .montage-sub { font-size:12px; color:#557755; margin-top:3px; }
+
+  .safety-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .safety-card { background:#161008; border:1px solid #f0a03022; border-radius:3px; padding:10px 12px; font-size:11px; color:#c08030; line-height:1.5; }
+  .safety-card strong { display:block; color:#e0b050; margin-bottom:3px; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">🌿 ÉCHAFAUDAGE v5 — VOTRE MATÉRIEL</div>
+      <div class="hdr-sub">4 poteaux 7×7 · Lames 3m · Vis 50mm · Boulons 100mm · Tubes acier 30×30</div>
+    </div>
+    <div style="font-family:'Space Mono',monospace;font-size:8px;color:#3a5a3a">PLATEAU 1,80m · PORTÉE 2,80m · 120×60cm</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on"  id="tab3d">▣ VUE 3D</div>
+    <div class="tab"     id="tabmat">◈ MATÉRIAUX</div>
+    <div class="tab"     id="tabmont">⑆ PLAN DE MONTAGE</div>
+  </div>
+
+  <div class="pages">
+
+    <!-- ══════════════ PAGE 3D ══════════════ -->
+    <div class="page on" id="page3d">
+      <div class="app3d">
+        <div class="three-wrap">
+          <canvas id="c"></canvas>
+          <div class="ctrl-top">
+            <button class="btn on" id="v3d">3D LIBRE</button>
+            <button class="btn"    id="vfront">FACE HAIE</button>
+            <button class="btn"    id="vside">CÔTÉ</button>
+            <button class="btn"    id="vtop">DESSUS</button>
+            <button class="btn"    id="vexplode">EXPLOSER</button>
+            <button class="btn hi" id="vhook">ZOOM ENCOCHE</button>
+            <button class="btn hi" id="vsteel">ZOOM TUBE ACIER</button>
+          </div>
+          <div class="ctrl-right">
+            <div class="slabel">MODULES</div>
+            <button class="mbtn" id="tm0"><span class="dot" style="background:var(--m1)"></span>ÉCHELLE A</button>
+            <button class="mbtn" id="tm1"><span class="dot" style="background:var(--m2)"></span>ÉCHELLE B</button>
+            <button class="mbtn" id="tm2"><span class="dot" style="background:var(--m3)"></span>PLATEAUX HAUT</button>
+            <button class="mbtn" id="tm3"><span class="dot" style="background:var(--mi)"></span>PLATEAU INTER.</button>
+            <button class="mbtn" id="tm4"><span class="dot" style="background:var(--steel)"></span>TUBES ACIER</button>
+          </div>
+          <div class="ctrl-bottom">
+            <div class="hint">🖱 GLISSER → ROTATION</div>
+            <div class="hint">⚙ MOLETTE → ZOOM</div>
+          </div>
+        </div>
+
+        <div class="side3d">
+          <div class="ptitle">Votre matériel</div>
+          <div class="mcard m1">
+            <div class="mcard-title">◈ POTEAUX 7×7 × 4 (rouge/bleu)</div>
+            <p>Vos 4 poteaux de 2,40 m = 2 montants par échelle. <strong>Aucune coupe.</strong> Section 70×70 mm très rigide.</p>
+          </div>
+          <div class="mcard m3">
+            <div class="mcard-title">◈ LAMES 3m → barreaux + lisses (orange)</div>
+            <p>Chaque lame de 3m se coupe en : 2 barreaux 65cm + 1 lisse plateau 120cm + chute 50cm. 12 lames suffisent.</p>
+          </div>
+          <div class="mcard mi">
+            <div class="mcard-title">◈ PLATEAU INTERMÉDIAIRE (vert)</div>
+            <p>À 0,90 m. Encoche + cale. Repositionnable sur n'importe quel barreau.</p>
+          </div>
+          <div class="mcard mh">
+            <div class="mcard-title">◈ TUBES ACIER 30×30 (gris)</div>
+            <p>Garde-corps à 2,00 m et 2,20 m. Coupés à 120 cm. Fixés par brides carrées Standers.</p>
+          </div>
+          <div class="warn" style="font-size:10px">
+            ⚠️ <strong>ZOOM ENCOCHE</strong> = détail fixation plateau.<br>
+            <strong>ZOOM TUBE</strong> = détail bride acier.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ PAGE MATÉRIAUX ══════════════ -->
+    <div class="page" id="pagemat" style="flex-direction:column;overflow-y:auto;padding:24px 32px;gap:18px;background:var(--bg);">
+
+      <div>
+        <div class="page-title">Liste des <span>matériaux</span></div>
+        <div class="page-sub">Adapté à votre stock : 4 poteaux 7×7 / 2,40m · lames 3m · vis 50mm · boulons 100mm · tubes acier 30×30</div>
+      </div>
+
+      <!-- DÉBIT LAMES -->
+      <div class="debit-box">
+        <h4>PLAN DE DÉBIT — 1 LAME DE 3,00 m</h4>
+        <div class="debit-lame">
+          <div class="debit-label">Lame type A</div>
+          <div class="debit-seg seg-bar"  style="width:130px">barreau 65cm</div>
+          <div style="width:2px;background:#1a2a1a"></div>
+          <div class="debit-seg seg-bar"  style="width:130px">barreau 65cm</div>
+          <div style="width:2px;background:#1a2a1a"></div>
+          <div class="debit-seg seg-lis"  style="width:240px">lisse plateau 120cm</div>
+          <div style="width:2px;background:#1a2a1a"></div>
+          <div class="debit-seg seg-chute"style="width:98px">chute 50cm</div>
+        </div>
+        <div class="debit-lame">
+          <div class="debit-label">Lame type B</div>
+          <div class="debit-seg seg-plan" style="width:240px">lames plancher 120cm</div>
+          <div style="width:2px;background:#1a2a1a"></div>
+          <div class="debit-seg seg-plan" style="width:240px">lames plancher 120cm</div>
+          <div style="width:2px;background:#1a2a1a"></div>
+          <div class="debit-seg seg-chute"style="width:120px">chute 60cm</div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:16px;font-size:10px;">
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#cc3333;border-radius:2px;display:inline-block"></span><span style="color:#7a997a">Barreaux échelles</span></span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#e08010;border-radius:2px;display:inline-block"></span><span style="color:#7a997a">Lisses plateaux</span></span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#4a90d9;border-radius:2px;display:inline-block"></span><span style="color:#7a997a">Lames plancher</span></span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#2a3a2a;border:1px dashed #3a5a3a;border-radius:2px;display:inline-block"></span><span style="color:#7a997a">Chutes (diagonales)</span></span>
+        </div>
+      </div>
+
+      <!-- STOCK DISPONIBLE -->
+      <div class="mat-section">
+        <div class="mat-section-hdr">
+          <h3>① Matériel disponible</h3>
+          <span class="mat-badge dispo">STOCK ✓</span>
+        </div>
+        <table class="mat-table">
+          <tr><th>Pièce</th><th>Coupe / usage</th><th>Qté obtenue</th><th>Utilisation</th></tr>
+          <tr>
+            <td><strong style="color:var(--cream)">Poteaux 70×70 mm / 2,40 m</strong><br><span class="note">4 poteaux disponibles</span></td>
+            <td class="cut">Aucune coupe</td>
+            <td class="qty">4 montants</td>
+            <td>2 montants par échelle × 2 échelles = structure principale</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--cream)">Lames terrasse / 3,00 m</strong><br><span class="note">~12 lames type A</span></td>
+            <td class="cut">65 + 65 + 120 cm<br>(chute 50cm)</td>
+            <td class="qty">14 barreaux<br>6 lisses plat.</td>
+            <td>7 barreaux/échelle × 2 + 2 lisses/plateau × 3 plateaux</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--cream)">Lames terrasse / 3,00 m</strong><br><span class="note">~4 lames type B</span></td>
+            <td class="cut">120 + 120 cm<br>(chute 60cm)</td>
+            <td class="qty">15 lames plancher</td>
+            <td>5 lames/plateau × 3 plateaux (2 hauts + 1 intermédiaire)</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--cream)">Vis terrasse 50 mm</strong></td>
+            <td class="cut">—</td>
+            <td class="qty">Stock existant</td>
+            <td>Fixation lames plancher sur lisses (2 vis/lame/lisse = 60 vis min.)</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--cream)">Boulons 100 mm + écrous</strong></td>
+            <td class="cut">—</td>
+            <td class="qty">Stock existant</td>
+            <td>Assemblage barreaux dans montants (2 boulons/barreau = 28 boulons)</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--cream)">Tubes acier 30×30×2 / 2,00 m</strong><br><span class="note">2 tubes disponibles</span></td>
+            <td class="cut">1 coupe à 120 cm<br>(chute 80 cm)</td>
+            <td class="qty">2 barres 120cm</td>
+            <td>Garde-corps bas (2,00 m) + haut (2,20 m)</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--cream)">Chutes lames (~50 cm)</strong></td>
+            <td class="cut">Biseau 10° au bout</td>
+            <td class="qty">6 cales</td>
+            <td>Blocage des plateaux sur les barreaux (2 cales/plateau)</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- À ACHETER -->
+      <div class="mat-section">
+        <div class="mat-section-hdr">
+          <h3>② À acheter — Weldom</h3>
+          <span class="mat-badge acheter">À PRÉVOIR</span>
+        </div>
+        <table class="mat-table">
+          <tr><th>Produit</th><th>Référence / rayon</th><th>Qté</th><th>Usage</th><th>Prix ~</th></tr>
+          <tr>
+            <td><strong style="color:var(--cream)">Bride carré tube zingué L.31 mm — Standers</strong></td>
+            <td class="cut">Quincaillerie → Cornière profilé → Brides Standers</td>
+            <td class="qty">8 pcs</td>
+            <td>Fixer tubes acier 30×30 sur montants bois · 2 brides/extrémité</td>
+            <td class="price">~2–3€/pc<br>→ ~20€</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--cream)">Vis inox torx 5×40 mm</strong></td>
+            <td class="cut">Quincaillerie → Visserie inox</td>
+            <td class="qty">Boîte 50</td>
+            <td>Uniquement pour visser les brides sur les montants</td>
+            <td class="price">~7–9€</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--cream)">Sangle à cliquet 25 mm</strong></td>
+            <td class="cut">Quincaillerie → Cordes et sangles · CMU ≥ 150 kg</td>
+            <td class="qty">4 pcs</td>
+            <td>Sécurité secondaire des 2 plateaux hauts (1 sangle/plateau)</td>
+            <td class="price">~4–5€/pc<br>→ ~18€</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--cream)">Rondelles M10 larges (Ø 30 mm)</strong></td>
+            <td class="cut">Quincaillerie → Boulonnerie</td>
+            <td class="qty">60 pcs</td>
+            <td>2 rondelles/boulon (côté tête + écrou) pour ne pas écraser le bois</td>
+            <td class="price">~5–8€</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--cream)">Écrous frein M10 (nylstop)</strong></td>
+            <td class="cut">Quincaillerie → Boulonnerie · écrou nylstop</td>
+            <td class="qty">30 pcs</td>
+            <td>Remplacer les écrous simples — ne se desserrent pas aux vibrations</td>
+            <td class="price">~6–8€</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--cream)">Lasure bois extérieur</strong></td>
+            <td class="cut">Peinture → Lasure/saturateur bois ext.</td>
+            <td class="qty">Pot 0,75 L</td>
+            <td>Traiter toutes les pièces avant assemblage. Renouveler chaque saison.</td>
+            <td class="price">~12–15€</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- BUDGET -->
+      <div class="budget-box">
+        <div class="budget-card">
+          <h4>BUDGET TOTAL ESTIMÉ</h4>
+          <div class="budget-row"><span>Poteaux 7×7 / 2,40m × 4</span><span>DISPO ✓</span></div>
+          <div class="budget-row"><span>Lames terrasse × 16</span><span>DISPO ✓</span></div>
+          <div class="budget-row"><span>Vis terrasse 50mm</span><span>DISPO ✓</span></div>
+          <div class="budget-row"><span>Boulons 100mm + écrous</span><span>DISPO ✓</span></div>
+          <div class="budget-row"><span>Tubes acier 30×30</span><span>DISPO ✓</span></div>
+          <div class="budget-row"><span>Brides Standers × 8</span><span>~20 €</span></div>
+          <div class="budget-row"><span>Vis inox 5×40 (×50)</span><span>~8 €</span></div>
+          <div class="budget-row"><span>Sangles cliquet × 4</span><span>~18 €</span></div>
+          <div class="budget-row"><span>Rondelles M10 larges (×60)</span><span>~7 €</span></div>
+          <div class="budget-row"><span>Écrous frein M10 (×30)</span><span>~7 €</span></div>
+          <div class="budget-row"><span>Lasure bois ext.</span><span>~13 €</span></div>
+          <div class="budget-row"><span>TOTAL À DÉPENSER</span><span style="font-size:18px">~73 €</span></div>
+        </div>
+        <div class="budget-card">
+          <h4>RÉCAPITULATIF LAMES</h4>
+          <div class="budget-row"><span>Lames type A (barreaux + lisses)</span><span>12 lames</span></div>
+          <div class="budget-row"><span>Lames type B (plancher)</span><span>4 lames</span></div>
+          <div class="budget-row"><span>TOTAL lames utilisées</span><span>16 lames</span></div>
+          <div style="height:8px"></div>
+          <div class="budget-row"><span>→ Barreaux 65cm obtenus</span><span>24 pcs</span></div>
+          <div class="budget-row"><span>→ Lisses plateau 120cm</span><span>12 pcs</span></div>
+          <div class="budget-row"><span>→ Lames plancher 120cm</span><span>16 pcs</span></div>
+          <div class="budget-row"><span>→ Chutes (cales, diagonales)</span><span>~16 pcs</span></div>
+          <div class="budget-row"><span>STOCK RESTANT</span><span style="color:var(--ga)">~0–4 lames</span></div>
+        </div>
+      </div>
+
+      <div class="warn">⚠️ Vos vis de terrasse 50 mm sont parfaites pour les lames de plancher sur les lisses. Pour les barreaux dans les poteaux 70×70, utilisez les boulons 100 mm — les vis 50 mm n'auraient pas assez de prise dans cette section.</div>
+
+    </div>
+
+    <!-- ══════════════ PAGE MONTAGE ══════════════ -->
+    <div class="page" id="pagemont">
+      <div class="montage-wrap" style="width:100%;overflow-y:auto;">
+        <div class="montage-inner">
+
+          <div>
+            <div class="montage-title">Plan de <span>montage</span></div>
+            <div class="montage-sub">Adapté à votre réalité · Échelles déjà construites ✓ · Barreaux à plat (lames) · Vis + boulons uniquement</div>
+          </div>
+
+          <!-- CONSTAT PHOTO -->
+          <div style="background:#0f1a0f;border:1px solid #5cb85c44;border-radius:4px;padding:16px 20px;display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;">
+            <div style="font-size:28px;line-height:1">✅</div>
+            <div>
+              <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--ga);letter-spacing:2px;margin-bottom:6px;">CE QUE J'AI VU SUR VOTRE PHOTO</div>
+              <div style="font-size:11px;color:#7a997a;line-height:1.8;display:grid;grid-template-columns:1fr 1fr;gap:2px 20px;">
+                <span>✓ 2 échelles assemblées à plat au sol</span>
+                <span>✓ Barreaux = lames posées <strong style="color:var(--cream)">à plat</strong> (face large vers le haut)</span>
+                <span>✓ Poteaux 7×7 bien visibles comme montants</span>
+                <span>✓ Vissage direct apparent — assemblage solide</span>
+                <span>✓ Espacement barreaux régulier ~30 cm</span>
+                <span>✓ Largeur échelle compatible avec les plateaux 120 cm</span>
+              </div>
+              <div style="margin-top:10px;font-size:11px;color:#c8a050;background:#1a1200;padding:8px 12px;border-radius:2px;border-left:3px solid #c8a050;">
+                <strong>Point clé :</strong> vos barreaux sont à plat → la lisse du plateau <strong>pose directement dessus</strong> sans encoche à tailler. Une simple butée vissée sur la lisse bloque tout. C'est encore plus simple.
+              </div>
+            </div>
+          </div>
+
+          <!-- SYSTÈME FIXATION PLATEAU — focus box -->
+          <div style="background:#0a0f0a;border:2px solid #5cb85c66;border-radius:4px;overflow:hidden;">
+            <div style="background:#0f1a0f;padding:12px 20px;border-bottom:1px solid #2d6a2d33;display:flex;align-items:center;gap:12px;">
+              <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--ga)">★</div>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:var(--cream)">Système de fixation plateau — butée vissée</div>
+                <div style="font-size:11px;color:#557755;margin-top:2px;">Zéro encoche · Zéro quincaillerie spéciale · Seulement vos vis 50mm et boulons 100mm</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-bottom:1px solid #2d6a2d22;">
+
+              <!-- Principe -->
+              <div style="padding:16px;border-right:1px solid #2d6a2d22;">
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--ga);letter-spacing:2px;margin-bottom:8px;">PRINCIPE</div>
+                <div style="font-size:11px;color:#7a997a;line-height:1.7;">
+                  La lisse du plateau (lame 120 cm posée sur champ) <strong style="color:var(--cream)">repose simplement par-dessus</strong> le barreau de l'échelle.<br><br>
+                  Une petite <strong style="color:var(--cream)">butée</strong> — chute de lame de 8 cm vissée perpendiculairement — bloque le plateau côté aval pour l'empêcher de glisser vers la haie.<br><br>
+                  Côté amont, le poids du plateau + votre poids maintient naturellement.
+                </div>
+              </div>
+
+              <!-- Schéma coupe -->
+              <div style="padding:16px;border-right:1px solid #2d6a2d22;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--ga);letter-spacing:2px;margin-bottom:8px;width:100%">COUPE VUE DE CÔTÉ</div>
+                <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:200px">
+                  <defs><marker id="marr" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#5cb85c"/></marker></defs>
+
+                  <!-- Poteau section -->
+                  <rect x="10" y="10" width="35" height="140" fill="#8b5e1a" stroke="#5a3a08" stroke-width="1.5" rx="2"/>
+                  <text x="27" y="160" fill="#c8a050" font-family="Space Mono" font-size="7" text-anchor="middle">POTEAU</text>
+
+                  <!-- Barreau (lame à plat) -->
+                  <rect x="45" y="68" width="100" height="18" fill="#c8a050" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+                  <text x="95" y="100" fill="#c8a050" font-family="Space Mono" font-size="7" text-anchor="middle">BARREAU (lame à plat)</text>
+
+                  <!-- Lisse plateau (sur champ) -->
+                  <rect x="58" y="38" width="18" height="32" fill="#e08010" stroke="#a05008" stroke-width="1.5" rx="2"/>
+                  <text x="67" y="34" fill="#e08010" font-family="Space Mono" font-size="7" text-anchor="middle">LISSE</text>
+
+                  <!-- Butée vissée -->
+                  <rect x="76" y="50" width="22" height="18" fill="#4a90d9" stroke="#2255aa" stroke-width="1.5" rx="2"/>
+                  <text x="87" y="62" fill="#fff" font-family="Space Mono" font-size="6" text-anchor="middle">BUTÉE</text>
+                  <!-- Vis butée -->
+                  <line x1="87" y1="50" x2="80" y2="42" stroke="#aaa" stroke-width="1.5"/>
+                  <circle cx="80" cy="40" r="3" fill="#aaa"/>
+
+                  <!-- Lames plancher -->
+                  <rect x="58" y="28" width="70" height="12" fill="#e08010" stroke="#a05008" stroke-width="1" rx="1"/>
+
+                  <!-- Flèche glissement bloqué -->
+                  <line x1="115" y1="76" x2="100" y2="76" stroke="#e05050" stroke-width="1.5" stroke-dasharray="3,2"/>
+                  <text x="130" y="79" fill="#e05050" font-family="Space Mono" font-size="7">← bloqué</text>
+
+                  <!-- Flèche poids -->
+                  <line x1="67" y1="12" x2="67" y2="20" stroke="#5cb85c" stroke-width="1.5" marker-end="url(#marr)"/>
+                  <text x="80" y="16" fill="#5cb85c" font-family="Space Mono" font-size="7">POIDS ↓</text>
+
+                  <!-- Vis dans barreau -->
+                  <line x1="67" y1="68" x2="67" y2="78" stroke="#aaa" stroke-width="1.5"/>
+                  <circle cx="67" cy="79" r="2.5" fill="#aaa"/>
+                </svg>
+              </div>
+
+              <!-- Instructions -->
+              <div style="padding:16px;">
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--ga);letter-spacing:2px;margin-bottom:8px;">FABRICATION</div>
+                <ol style="padding-left:16px;display:flex;flex-direction:column;gap:7px;">
+                  <li style="font-size:11px;color:#7a997a;line-height:1.5;"><strong style="color:var(--cream)">Couper 6 chutes</strong> de 8 cm dans les rebuts de lames — ce sont les butées (2 par plateau)</li>
+                  <li style="font-size:11px;color:#7a997a;line-height:1.5;"><strong style="color:var(--cream)">Construire la lisse</strong> : poser 5 lames de plancher sur 2 lisses 120 cm, visser avec vis 50mm (2 vis/lame/lisse)</li>
+                  <li style="font-size:11px;color:#7a997a;line-height:1.5;"><strong style="color:var(--cream)">Visser les 2 butées</strong> perpendiculairement sous chaque lisse, côté haie, à 2 cm du bord. Vis 50mm traversant la lisse + pré-percée</li>
+                  <li style="font-size:11px;color:#7a997a;line-height:1.5;"><strong style="color:var(--cream)">Poser le plateau</strong> : les lisses par-dessus les barreaux, les butées s'appuient contre le flanc du barreau côté haie</li>
+                  <li style="font-size:11px;color:#7a997a;line-height:1.5;"><strong style="color:var(--cream)">Bloquer côté amont</strong> : 1 vis 50mm en biais dans la lisse → barreau, de l'autre côté</li>
+                </ol>
+              </div>
+            </div>
+
+            <!-- Vue 3D du système -->
+            <div style="padding:14px 20px;background:#080e08;border-top:1px solid #2d6a2d22;">
+              <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--ga);letter-spacing:2px;margin-bottom:8px;">VUE 3D PRINCIPE — PLATEAU SUR BARREAU</div>
+              <svg viewBox="0 0 600 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:130px">
+                <!-- Poteau gauche -->
+                <rect x="10" y="10" width="30" height="115" fill="#8b5e1a" stroke="#5a3a08" stroke-width="1.5" rx="2"/>
+                <!-- Poteau droit -->
+                <rect x="560" y="10" width="30" height="115" fill="#8b5e1a" stroke="#5a3a08" stroke-width="1.5" rx="2"/>
+
+                <!-- Barreau gauche (lame à plat, dépasse des poteaux) -->
+                <rect x="5" y="52" width="80" height="16" fill="#c8a050" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+                <!-- Barreau droit -->
+                <rect x="515" y="52" width="80" height="16" fill="#c8a050" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+                <text x="300" y="82" fill="#c8a050" font-family="Space Mono" font-size="8" text-anchor="middle">BARREAUX (lames à plat, déjà vissés sur vos échelles)</text>
+
+                <!-- Lisses plateau (2 lisses sur champ, traversent les barreaux) -->
+                <rect x="40" y="32" width="520" height="14" fill="#e08010" stroke="#a05008" stroke-width="1.5" rx="2"/>
+                <rect x="40" y="48" width="520" height="14" fill="#e08010" stroke="#a05008" stroke-width="1.5" rx="2"/>
+
+                <!-- Lames plancher (sur les lisses) -->
+                <rect x="40" y="18" width="520" height="16" fill="#e08010" stroke="#a05008" stroke-width="1" rx="1"/>
+
+                <!-- Butées (petites pièces bleues sous lisse côté haie) -->
+                <rect x="75"  y="60" width="20" height="14" fill="#4a90d9" stroke="#2255aa" stroke-width="1.5" rx="1"/>
+                <rect x="505" y="60" width="20" height="14" fill="#4a90d9" stroke="#2255aa" stroke-width="1.5" rx="1"/>
+                <text x="85"  y="69" fill="#fff" font-family="Space Mono" font-size="6" text-anchor="middle">BU</text>
+                <text x="515" y="69" fill="#fff" font-family="Space Mono" font-size="6" text-anchor="middle">BU</text>
+
+                <!-- Labels -->
+                <text x="300" y="15" fill="#e08010" font-family="Space Mono" font-size="8" text-anchor="middle">PLATEAU (lisses + lames plancher)</text>
+                <text x="130" y="68" fill="#4a90d9" font-family="Space Mono" font-size="8">← BUTÉES (côté haie)</text>
+                <text x="300" y="128" fill="#557755" font-family="Space Mono" font-size="8" text-anchor="middle">Distance entre échelles = 120 cm (longueur des lisses)</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- ÉTAPES RESTANTES -->
+          <div class="step-grid">
+
+            <!-- ÉTAPE 1 (déjà faite) -->
+            <div class="step-card" style="opacity:0.55;border-color:#2d6a2d55;">
+              <div class="step-hdr" style="background:#0a0f0a;">
+                <div class="step-num" style="color:#446644">✓</div>
+                <h3 style="color:#557755">Échelles construites</h3>
+                <span class="step-time" style="color:#2d4a2d">FAIT ✓</span>
+              </div>
+              <div class="step-body" style="grid-template-columns:1fr">
+                <div class="step-text">
+                  <ul>
+                    <li>2 échelles avec poteaux 7×7 et barreaux lames à plat — <strong style="color:#557755">déjà réalisées</strong></li>
+                    <li>Vérifier que les vis sont bien serrées et qu'aucun barreau ne bouge</li>
+                    <li>Si barreaux vissés (pas boulonnés) : ajouter un boulon 100mm traversant sur le barreau le plus haut utilisé (celui à 1,80m) pour sécuriser</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- ÉTAPE 2 -->
+            <div class="step-card">
+              <div class="step-hdr">
+                <div class="step-num">01</div>
+                <h3>Préparer les plateaux</h3>
+                <span class="step-time">~40 min</span>
+              </div>
+              <div class="step-body">
+                <div class="step-text">
+                  <ul>
+                    <li><strong>Couper les lisses :</strong> 6 lames à 120 cm (2 lisses × 3 plateaux)</li>
+                    <li><strong>Couper les lames plancher :</strong> 15 lames à 120 cm (5 × 3 plateaux)</li>
+                    <li><strong>Couper les butées :</strong> 12 chutes de 8 cm dans les rebuts (4 butées/plateau × 3)</li>
+                    <li><strong>Couper les tubes acier :</strong> 2 × 120 cm à la meuleuse (garde-corps)</li>
+                    <li>Traiter toutes les pièces à la lasure avant assemblage</li>
+                  </ul>
+                  <div class="tools">
+                    <span class="tool-tag">SCIE CIRCULAIRE</span>
+                    <span class="tool-tag">MEULEUSE</span>
+                    <span class="tool-tag">PINCEAU LASURE</span>
+                  </div>
+                </div>
+                <div class="step-svg">
+                  <svg viewBox="0 0 130 110" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Lame 3m avec coupes -->
+                    <rect x="5" y="15" width="120" height="14" fill="#5a4010" stroke="#3a2a08" stroke-width="1" rx="2"/>
+                    <text x="65" y="12" fill="#c8a050" font-family="Space Mono" font-size="7" text-anchor="middle">LAME 3,00 m</text>
+                    <line x1="53" y1="13" x2="53" y2="31" stroke="#e05050" stroke-width="1.5" stroke-dasharray="3,2"/>
+                    <line x1="101" y1="13" x2="101" y2="31" stroke="#e05050" stroke-width="1.5" stroke-dasharray="3,2"/>
+                    <rect x="5"  y="34" width="48" height="12" fill="#e08010" rx="1"/>
+                    <rect x="54" y="34" width="47" height="12" fill="#e08010" rx="1"/>
+                    <rect x="102"y="34" width="23" height="12" fill="#2a3a2a" stroke="#3a5a3a" stroke-width="1" rx="1" stroke-dasharray="2,1"/>
+                    <text x="29"  y="43" fill="#fff" font-family="Space Mono" font-size="6" text-anchor="middle">lisse 120cm</text>
+                    <text x="77"  y="43" fill="#fff" font-family="Space Mono" font-size="6" text-anchor="middle">lisse 120cm</text>
+                    <text x="113" y="43" fill="#7a997a" font-family="Space Mono" font-size="6" text-anchor="middle">60cm</text>
+                    <!-- Butée -->
+                    <rect x="20" y="68" width="28" height="12" fill="#4a90d9" stroke="#2255aa" stroke-width="1.5" rx="1"/>
+                    <text x="34" y="77" fill="#fff" font-family="Space Mono" font-size="6" text-anchor="middle">butée 8cm</text>
+                    <text x="34" y="90" fill="#4a90d9" font-family="Space Mono" font-size="7" text-anchor="middle">× 4 / plateau</text>
+                    <text x="95" y="75" fill="#557755" font-family="Space Mono" font-size="7">dans chutes</text>
+                    <text x="95" y="85" fill="#557755" font-family="Space Mono" font-size="7">de lames</text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- ÉTAPE 3 -->
+            <div class="step-card">
+              <div class="step-hdr">
+                <div class="step-num">02</div>
+                <h3>Assembler chaque plateau</h3>
+                <span class="step-time">~20 min × 3</span>
+              </div>
+              <div class="step-body">
+                <div class="step-text">
+                  <ul>
+                    <li>Poser les 2 lisses parallèles à <strong>50 cm d'axe en axe</strong> sur le sol</li>
+                    <li>Visser les 5 lames de plancher dessus, perpendiculairement — <strong>2 vis 50mm par lame et par lisse</strong>, 5mm d'écartement entre lames</li>
+                    <li>Pré-percer les butées Ø 4mm pour éviter la fissure</li>
+                    <li>Visser les <strong>2 butées côté haie</strong> sous chaque lisse : 2 vis 50mm par butée en biais, butée affleure le bas de la lisse</li>
+                    <li>Optionnel : 1 vis 50mm en biais côté amont (sécurité)</li>
+                  </ul>
+                  <div class="tools">
+                    <span class="tool-tag">VISSEUSE</span>
+                    <span class="tool-tag">VIS 50mm</span>
+                    <span class="tool-tag">FORET Ø4mm</span>
+                    <span class="tool-tag">ÉQUERRE</span>
+                  </div>
+                </div>
+                <div class="step-svg">
+                  <svg viewBox="0 0 130 110" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 2 lisses -->
+                    <rect x="5"  y="45" width="120" height="12" fill="#e08010" stroke="#a05008" stroke-width="1.5" rx="1"/>
+                    <rect x="5"  y="75" width="120" height="12" fill="#e08010" stroke="#a05008" stroke-width="1.5" rx="1"/>
+                    <text x="0" y="52" fill="#e08010" font-family="Space Mono" font-size="7" transform="rotate(-90,0,52)" text-anchor="middle">50cm</text>
+                    <!-- Lames plancher -->
+                    <rect x="10" y="30" width="18" height="16" fill="#e08010" stroke="#a05008" stroke-width="1" rx="1"/>
+                    <rect x="34" y="30" width="18" height="16" fill="#e08010" stroke="#a05008" stroke-width="1" rx="1"/>
+                    <rect x="58" y="30" width="18" height="16" fill="#e08010" stroke="#a05008" stroke-width="1" rx="1"/>
+                    <rect x="82" y="30" width="18" height="16" fill="#e08010" stroke="#a05008" stroke-width="1" rx="1"/>
+                    <rect x="106"y="30" width="18" height="16" fill="#e08010" stroke="#a05008" stroke-width="1" rx="1"/>
+                    <!-- Vis lames -->
+                    <circle cx="19" cy="45" r="2" fill="#aaa"/>
+                    <circle cx="43" cy="45" r="2" fill="#aaa"/>
+                    <!-- Butées -->
+                    <rect x="5"  y="55" width="14" height="10" fill="#4a90d9" stroke="#2255aa" stroke-width="1.5" rx="1"/>
+                    <rect x="5"  y="77" width="14" height="10" fill="#4a90d9" stroke="#2255aa" stroke-width="1.5" rx="1"/>
+                    <text x="50" y="100" fill="#4a90d9" font-family="Space Mono" font-size="7">BUTÉES côté haie →</text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- ÉTAPE 4 -->
+            <div class="step-card step-full">
+              <div class="step-hdr">
+                <div class="step-num">03</div>
+                <h3>Dresser les 2 échelles · Poser les plateaux</h3>
+                <span class="step-time">~30 min · 2 PERSONNES</span>
+              </div>
+              <div class="step-body" style="grid-template-columns:1fr 220px">
+                <div class="step-text">
+                  <ul>
+                    <li><strong>Choisir l'emplacement :</strong> sol le plus plat possible, les 2 échelles parallèles, perpendiculaires à la haie</li>
+                    <li>Espacer les 2 échelles de <strong>120 cm intérieur</strong> (longueur des lisses)</li>
+                    <li>Vérifier la verticalité des 2 poteaux avec le niveau — caler si besoin (planche sous pied)</li>
+                    <li><strong>Poser le plateau intermédiaire à 0,90 m :</strong> engager les 2 lisses par-dessus le barreau correspondant. Les butées s'appuient contre le flanc du barreau côté haie. Vérifier qu'il ne glisse pas.</li>
+                    <li><strong>Poser les 2 plateaux hauts à 1,80 m</strong> de la même façon, côte à côte. Visser 1 vis 50mm en biais côté amont pour immobiliser.</li>
+                    <li>Vérifier que la surface est horizontale (niveau sur le plateau)</li>
+                  </ul>
+                  <div class="tools">
+                    <span class="tool-tag">NIVEAU À BULLE</span>
+                    <span class="tool-tag">MÈTRE</span>
+                    <span class="tool-tag">VISSEUSE</span>
+                    <span class="tool-tag">CALES BOIS</span>
+                  </div>
+                </div>
+                <div class="step-svg" style="padding:14px">
+                  <svg viewBox="0 0 190 140" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Haie -->
+                    <rect x="0" y="0" width="190" height="10" fill="#1a4a1a" rx="2"/>
+                    <text x="95" y="8" fill="#5cb85c" font-family="Space Mono" font-size="7" text-anchor="middle">HAIE ← 30cm max →</text>
+                    <!-- Échelle A vue dessus (rectangle fin = poteau vu de dessus) -->
+                    <rect x="15" y="15" width="14" height="65" fill="#cc2222" stroke="#881111" stroke-width="1.5" rx="2"/>
+                    <rect x="161" y="15" width="14" height="65" fill="#2255cc" stroke="#112288" stroke-width="1.5" rx="2"/>
+                    <!-- Barreaux visibles de dessus (traits sur les poteaux) -->
+                    <line x1="15" y1="32" x2="29" y2="32" stroke="#c8a050" stroke-width="2"/>
+                    <line x1="15" y1="47" x2="29" y2="47" stroke="#c8a050" stroke-width="2"/>
+                    <line x1="15" y1="62" x2="29" y2="62" stroke="#c8a050" stroke-width="2"/>
+                    <line x1="161" y1="32" x2="175" y2="32" stroke="#c8a050" stroke-width="2"/>
+                    <line x1="161" y1="47" x2="175" y2="47" stroke="#c8a050" stroke-width="2"/>
+                    <line x1="161" y1="62" x2="175" y2="62" stroke="#c8a050" stroke-width="2"/>
+                    <!-- Plateaux hauts (2 côte à côte) -->
+                    <rect x="29" y="20" width="132" height="12" fill="#e08010" stroke="#a05008" stroke-width="1" rx="1"/>
+                    <rect x="29" y="33" width="132" height="12" fill="#e08010" stroke="#a05008" stroke-width="1" rx="1"/>
+                    <!-- Butées bleues sur lisses -->
+                    <rect x="29" y="20" width="8" height="12" fill="#4a90d9" rx="1"/>
+                    <rect x="29" y="33" width="8" height="12" fill="#4a90d9" rx="1"/>
+                    <rect x="153" y="20" width="8" height="12" fill="#4a90d9" rx="1"/>
+                    <rect x="153" y="33" width="8" height="12" fill="#4a90d9" rx="1"/>
+                    <!-- Plateau inter -->
+                    <rect x="29" y="52" width="132" height="8" fill="#20c090" stroke="#108060" stroke-width="1" rx="1" stroke-dasharray="4,2"/>
+                    <!-- Tubes acier -->
+                    <rect x="29" y="70" width="132" height="4" fill="#99aabb" stroke="#667788" stroke-width="1" rx="1"/>
+                    <rect x="29" y="76" width="132" height="4" fill="#99aabb" stroke="#667788" stroke-width="1" rx="1"/>
+                    <!-- Cotes -->
+                    <line x1="29" y1="115" x2="161" y2="115" stroke="#446644" stroke-width="1"/>
+                    <line x1="29" y1="112" x2="29" y2="118" stroke="#446644" stroke-width="1"/>
+                    <line x1="161" y1="112" x2="161" y2="118" stroke="#446644" stroke-width="1"/>
+                    <text x="95" y="125" fill="#4a7a4a" font-family="Space Mono" font-size="8" text-anchor="middle">120 cm intérieur</text>
+                    <text x="95" y="138" fill="#4a90d9" font-family="Space Mono" font-size="7" text-anchor="middle">■ = butées côté haie</text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- ÉTAPE 5 -->
+            <div class="step-card">
+              <div class="step-hdr">
+                <div class="step-num">04</div>
+                <h3>Fixer les tubes acier garde-corps</h3>
+                <span class="step-time">~20 min</span>
+              </div>
+              <div class="step-body">
+                <div class="step-text">
+                  <ul>
+                    <li>Couper les 2 tubes à <strong>120 cm</strong> à la meuleuse</li>
+                    <li>Appuyer le tube à <strong>2,00 m</strong> sur les 2 montants intérieurs, côté haie</li>
+                    <li>Percer 2 trous Ø 11mm traversants dans le poteau à cette hauteur</li>
+                    <li>Faire passer un <strong>boulon 100mm</strong> de part en part à travers le poteau ET le tube (ou à côté, avec étrier en U formé dans une chute de lame)</li>
+                    <li><strong>Alternative sans perçage tube :</strong> coller 2 chutes de lame en L autour du tube et boulonner le tout dans le poteau</li>
+                    <li>Répéter à <strong>2,20 m</strong></li>
+                  </ul>
+                  <div class="tools">
+                    <span class="tool-tag">MEULEUSE</span>
+                    <span class="tool-tag">PERCEUSE Ø11mm</span>
+                    <span class="tool-tag">CLÉ 17mm</span>
+                    <span class="tool-tag">BOULONS 100mm</span>
+                  </div>
+                </div>
+                <div class="step-svg">
+                  <svg viewBox="0 0 130 110" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Poteau -->
+                    <rect x="48" y="5" width="34" height="100" fill="#8b5e1a" stroke="#5a3a08" stroke-width="1.5" rx="2"/>
+                    <!-- Tube acier -->
+                    <rect x="5"  y="40" width="43" height="16" fill="#99aabb" stroke="#667788" stroke-width="1.5" rx="2"/>
+                    <rect x="82" y="40" width="43" height="16" fill="#99aabb" stroke="#667788" stroke-width="1.5" rx="2"/>
+                    <!-- Boulon traversant -->
+                    <line x1="30" y1="48" x2="100" y2="48" stroke="#aaa" stroke-width="2.5"/>
+                    <circle cx="28" cy="48" r="5" fill="#888" stroke="#555" stroke-width="1.5"/>
+                    <circle cx="102" cy="48" r="4" fill="#888" stroke="#555" stroke-width="1.5"/>
+                    <text x="65" y="42" fill="#aabbcc" font-family="Space Mono" font-size="7" text-anchor="middle">BOULON 100mm</text>
+                    <text x="65" y="108" fill="#667788" font-family="Space Mono" font-size="7" text-anchor="middle">traversant poteau + tube</text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- ÉTAPE 6 — CHECKLIST -->
+            <div class="step-card">
+              <div class="step-hdr">
+                <div class="step-num">05</div>
+                <h3>Vérification finale</h3>
+                <span class="step-time">~10 min · OBLIGATOIRE</span>
+              </div>
+              <div class="step-body" style="grid-template-columns:1fr">
+                <div class="step-text" style="padding:12px 14px">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 16px">
+                    <div class="check-row"><div class="check-box">□</div><p><strong>Verticalité :</strong> niveau sur les 2 poteaux de chaque échelle</p></div>
+                    <div class="check-row"><div class="check-box">□</div><p><strong>Écartement :</strong> 120 cm intérieur entre les 2 échelles</p></div>
+                    <div class="check-row"><div class="check-box">□</div><p><strong>Butées :</strong> bien appuyées contre les barreaux, ne bougent pas</p></div>
+                    <div class="check-row"><div class="check-box">□</div><p><strong>Plateaux :</strong> horizontaux, ne glissent pas quand on tire</p></div>
+                    <div class="check-row"><div class="check-box">□</div><p><strong>Test charge :</strong> monter seul, piétiner — aucun mouvement</p></div>
+                    <div class="check-row"><div class="check-box">□</div><p><strong>Garde-corps :</strong> pousser fort sur les tubes — boulons serrés</p></div>
+                    <div class="check-row"><div class="check-box">□</div><p><strong>Sol :</strong> pieds d'échelle ne s'enfoncent ni ne glissent</p></div>
+                    <div class="check-row"><div class="check-box">□</div><p><strong>Haie :</strong> max 30 cm entre le bord du plateau et la haie</p></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- SÉCURITÉ -->
+          <div>
+            <div class="ptitle" style="margin-bottom:10px">⚠️ Règles de sécurité permanentes</div>
+            <div class="safety-grid">
+              <div class="safety-card"><strong>2 personnes pour dresser</strong>Une personne tient l'échelle debout, l'autre vérifie la verticalité et pose les plateaux. Ne jamais dresser seul des échelles de 2,40 m.</div>
+              <div class="safety-card"><strong>Vérifier les butées à chaque pose</strong>Avant de monter, tirer sur chaque plateau — les butées doivent encaisser sans que le plateau bouge. 5 secondes, vitales.</div>
+              <div class="safety-card"><strong>Sol instable = cales sous pieds</strong>Si le terrain penche ou que les pieds s'enfoncent, poser des planches sous les pieds d'échelle pour répartir la charge.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /pages -->
+</div><!-- /layout -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+
+  // ── TABS ──
+  function switchTab(tabId, pageId) {
+    ['tab3d','tabmat','tabmont'].forEach(function(t){ document.getElementById(t).classList.remove('on'); });
+    ['page3d','pagemat','pagemont'].forEach(function(p){ document.getElementById(p).classList.remove('on'); });
+    document.getElementById(tabId).classList.add('on');
+    document.getElementById(pageId).classList.add('on');
+    if (pageId === 'page3d') setTimeout(resize, 30);
+  }
+  document.getElementById('tab3d').addEventListener('click',   function(){ switchTab('tab3d',   'page3d');   });
+  document.getElementById('tabmat').addEventListener('click',  function(){ switchTab('tabmat',  'pagemat');  });
+  document.getElementById('tabmont').addEventListener('click', function(){ switchTab('tabmont', 'pagemont'); });
+
+  // ── THREE.JS ──
+  var canvas = document.getElementById('c');
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x040904);
+  scene.fog = new THREE.Fog(0x040904, 9, 22);
+
+  var camera = new THREE.PerspectiveCamera(42, 1, 0.005, 50);
+
+  scene.add(new THREE.AmbientLight(0x446644, 1.0));
+  var sun = new THREE.DirectionalLight(0xfff5ee, 1.4);
+  sun.position.set(3, 8, 5); sun.castShadow = true;
+  sun.shadow.mapSize.width = sun.shadow.mapSize.height = 2048;
+  scene.add(sun);
+  var fill = new THREE.DirectionalLight(0x9999ff, 0.3);
+  fill.position.set(-4, 3, -3); scene.add(fill);
+
+  // Materials
+  var mLad1  = new THREE.MeshLambertMaterial({ color: 0xcc2222 });
+  var mLad2  = new THREE.MeshLambertMaterial({ color: 0x2255cc });
+  var mBar   = new THREE.MeshLambertMaterial({ color: 0xc8a050 }); // barreaux lames
+  var mPlat  = new THREE.MeshLambertMaterial({ color: 0xe08010 });
+  var mInter = new THREE.MeshLambertMaterial({ color: 0x20c090 });
+  var mSteel = new THREE.MeshLambertMaterial({ color: 0x99aabb });
+  var mBride = new THREE.MeshLambertMaterial({ color: 0x667788 });
+  var mNotch = new THREE.MeshLambertMaterial({ color: 0xd4b060 }); // cale
+  var mFoot  = new THREE.MeshLambertMaterial({ color: 0x5a4010 });
+  var mGnd   = new THREE.MeshLambertMaterial({ color: 0x0e160e });
+
+  function mkBox(w, h, d, mat, x, y, z, parent) {
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z);
+    m.castShadow = true; m.receiveShadow = true;
+    parent.add(m); return m;
+  }
+
+  // Dimensions — adapted to 70x70 posts, lames barreaux
+  var LH   = 2.40;  // poteau height
+  var LW   = 0.60;  // ladder width (Z axis, perpendicular to hedge)
+  var PS   = 0.070; // post section 70mm
+  var BW   = 0.145; // barreau width (lame 145mm)
+  var BT   = 0.027; // barreau thickness (lame 27mm)
+  var SPAN = 1.20;  // distance between ladder centres
+  var PH   = 1.80;  // platform height
+  var PIH  = 0.90;  // intermediate platform height
+  var PW   = 0.295; // each platform width
+  var TS   = 0.030; // tube steel 30mm
+  var GH1  = 2.00;
+  var GH2  = 2.20;
+
+  var gA  = new THREE.Group();
+  var gB  = new THREE.Group();
+  var gP  = new THREE.Group();
+  var gPI = new THREE.Group();
+  var gGC = new THREE.Group();
+  var allGroups = [gA, gB, gP, gPI, gGC];
+  allGroups.forEach(function(g){ scene.add(g); });
+
+  // ── LADDER — posts are 70×70, barreaux are lames ──
+  function buildLadder(g, mat) {
+    var zF = -LW/2 + PS/2, zB = LW/2 - PS/2;
+    // 2 posts (70×70)
+    mkBox(PS, LH, PS, mat, 0, LH/2, zF, g);
+    mkBox(PS, LH, PS, mat, 0, LH/2, zB, g);
+    // top & bottom rails
+    mkBox(PS, PS, LW, mat, 0, LH - PS*0.6, 0, g);
+    mkBox(PS, PS, LW, mat, 0, PS*0.4, 0, g);
+    // 7 barreaux as lames (wide face horizontal)
+    for (var i = 1; i <= 7; i++) {
+      mkBox(BT, BW, LW+PS, mBar, 0, i * 0.30, 0, g);
+    }
+    // Foot spreaders
+    mkBox(0.55, BT*1.5, BT*1.5, mFoot, 0, BT*0.7, zF, g);
+    mkBox(0.55, BT*1.5, BT*1.5, mFoot, 0, BT*0.7, zB, g);
+    // Foot pads
+    mkBox(0.06, 0.02, 0.06, mBride, -0.24, 0.01, zF, g);
+    mkBox(0.06, 0.02, 0.06, mBride,  0.24, 0.01, zF, g);
+    mkBox(0.06, 0.02, 0.06, mBride, -0.24, 0.01, zB, g);
+    mkBox(0.06, 0.02, 0.06, mBride,  0.24, 0.01, zB, g);
+    // Diagonal
+    var dLen = Math.sqrt(LW*LW + (LH*0.85)*(LH*0.85));
+    var diag = new THREE.Mesh(new THREE.BoxGeometry(BT, dLen, BT), mBar);
+    diag.position.set(0, LH*0.44, 0);
+    diag.rotation.x = Math.atan2(LW, LH*0.85);
+    diag.castShadow = true; g.add(diag);
+  }
+
+  buildLadder(gA, mLad1); buildLadder(gB, mLad2);
+  gA.position.set(-SPAN/2, 0, 0);
+  gB.position.set( SPAN/2, 0, 0);
+
+  // ── PLATFORM with notch visual ──
+  function buildPlatform(g, mat, withToe) {
+    var nL = 5;
+    var notchH = BW + 0.004;
+    // 2 lisses (lames sur champ)
+    var lzs = [-PW/2 + 0.03, PW/2 - 0.03];
+    for (var li = 0; li < lzs.length; li++) {
+      // lisse lower
+      mkBox(SPAN+0.10, BT, BT*2, mFoot, 0, -0.04, lzs[li], g);
+      // lisse upper
+      mkBox(SPAN+0.10, BT, BT*2, mFoot, 0,  0.06, lzs[li], g);
+      // notch cale
+      mkBox(0.10, notchH*0.85, BT*1.8, mNotch, SPAN*0.25, 0, lzs[li], g);
+    }
+    // Lames plancher
+    for (var i = 0; i < nL; i++) {
+      var z2 = -PW/2 + 0.025 + i*(PW-0.03)/(nL-1);
+      mkBox(SPAN, BT, BW, mat, 0, 0.085, z2, g);
+    }
+    if (withToe) {
+      mkBox(SPAN, 0.08, BT, mat, 0, 0.13, -PW/2+0.012, g);
+    }
+    // Clamp visuals at ends
+    mkBox(0.035, 0.10, PW+0.02, mBride, -SPAN/2-0.01, -0.01, 0, g);
+    mkBox(0.035, 0.10, PW+0.02, mBride,  SPAN/2+0.01, -0.01, 0, g);
+  }
+
+  buildPlatform(gP,  mPlat, true);
+  buildPlatform(gPI, mInter, false);
+  var p1z = -LW/2 + PW/2, p2z = LW/2 - PW/2;
+  // Two side-by-side platforms at PH
+  var gP1 = new THREE.Group(); gP1.position.set(0, PH, p1z);
+  var gP2 = new THREE.Group(); gP2.position.set(0, PH, p2z);
+  // Clone platform children into both
+  gP.position.set(0, PH, p1z);
+  // For simplicity render a single combined group
+  buildPlatform(gPI, mInter, false); // already done above
+  gPI.position.set(0, PIH, 0);
+
+  // ── STEEL HANDRAILS ──
+  function buildRails(g) {
+    mkBox(SPAN+0.06, TS, TS, mSteel, 0, GH1, 0, g);
+    mkBox(SPAN+0.06, TS, TS, mSteel, 0, GH2, 0, g);
+    var xends = [-SPAN/2, SPAN/2];
+    var yends = [GH1, GH2];
+    for (var xi = 0; xi < xends.length; xi++) {
+      for (var yi = 0; yi < yends.length; yi++) {
+        mkBox(0.025, TS+0.014, TS+0.014, mBride, xends[xi], yends[yi], 0, g);
+        mkBox(0.016, 0.015, 0.015, new THREE.MeshLambertMaterial({color:0x556677}), xends[xi]-0.022, yends[yi]+0.016, 0, g);
+        mkBox(0.016, 0.015, 0.015, new THREE.MeshLambertMaterial({color:0x556677}), xends[xi]-0.022, yends[yi]-0.016, 0, g);
+      }
+    }
+  }
+  buildRails(gGC);
+
+  // Ground
+  var ground = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), mGnd);
+  ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+  var grid = new THREE.GridHelper(8, 32, 0x182818, 0x122012);
+  grid.position.y = 0.002; scene.add(grid);
+
+  // Positions
+  var origPos = [
+    { x: -SPAN/2, y: 0,   z: 0   },
+    { x:  SPAN/2, y: 0,   z: 0   },
+    { x: 0,       y: PH,  z: p1z },
+    { x: 0,       y: PIH, z: 0   },
+    { x: 0,       y: 0,   z: 0   },
+  ];
+  var explodePos = [
+    { x: -SPAN/2-2.1, y: 0,       z: -1.2 },
+    { x:  SPAN/2+2.1, y: 0,       z: -1.2 },
+    { x: 0,           y: PH+1.8,  z: -0.7 },
+    { x: 0,           y: PIH+1.4, z:  1.0 },
+    { x: 0,           y: 2.9,     z: -1.6 },
+  ];
+  var exploded = false;
+
+  // Camera
+  var theta=0.55, phi=0.42, radius=6.0;
+  var tTheta=0.55, tPhi=0.42, tRadius=6.0;
+  var isDragging=false, prevX=0, prevY=0, autoRot=true;
+  var camTgt={x:0,y:1.0,z:0}, tTgt={x:0,y:1.0,z:0};
+
+  function resize() {
+    var w=canvas.parentElement.clientWidth, h=canvas.parentElement.clientHeight;
+    renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize); resize();
+
+  canvas.addEventListener('mousedown', function(e){ isDragging=true; prevX=e.clientX; prevY=e.clientY; autoRot=false; });
+  window.addEventListener('mouseup', function(){ isDragging=false; });
+  window.addEventListener('mousemove', function(e){
+    if(!isDragging) return;
+    tTheta -= (e.clientX-prevX)*0.009;
+    tPhi = Math.max(0.05, Math.min(Math.PI/2-0.04, tPhi-(e.clientY-prevY)*0.007));
+    prevX=e.clientX; prevY=e.clientY;
+  });
+  canvas.addEventListener('wheel', function(e){
+    tRadius=Math.max(0.2, Math.min(11, tRadius+e.deltaY*0.004)); e.preventDefault();
+  }, {passive:false});
+
+  function clearBtns(){ ['v3d','vfront','vside','vtop','vhook','vsteel'].forEach(function(id){ document.getElementById(id).classList.remove('on'); }); }
+
+  document.getElementById('v3d').addEventListener('click', function(){ clearBtns(); this.classList.add('on'); autoRot=true; tRadius=6.0; tTgt={x:0,y:1.0,z:0}; });
+  document.getElementById('vfront').addEventListener('click', function(){ clearBtns(); this.classList.add('on'); autoRot=false; tTheta=0; tPhi=0.28; tRadius=6.0; tTgt={x:0,y:1.0,z:0}; });
+  document.getElementById('vside').addEventListener('click', function(){ clearBtns(); this.classList.add('on'); autoRot=false; tTheta=Math.PI/2; tPhi=0.28; tRadius=6.0; tTgt={x:0,y:1.0,z:0}; });
+  document.getElementById('vtop').addEventListener('click', function(){ clearBtns(); this.classList.add('on'); autoRot=false; tTheta=0.1; tPhi=Math.PI/2-0.06; tRadius=5.5; tTgt={x:0,y:1.0,z:0}; });
+  document.getElementById('vhook').addEventListener('click', function(){ clearBtns(); this.classList.add('on'); autoRot=false; tTheta=Math.PI*0.75; tPhi=0.22; tRadius=0.5; tTgt={x:SPAN/2, y:PH, z:p1z}; });
+  document.getElementById('vsteel').addEventListener('click', function(){ clearBtns(); this.classList.add('on'); autoRot=false; tTheta=Math.PI*0.88; tPhi=0.40; tRadius=0.45; tTgt={x:SPAN/2, y:GH1, z:0}; });
+
+  document.getElementById('vexplode').addEventListener('click', function(){
+    exploded=!exploded;
+    this.textContent=exploded?'ASSEMBLER':'EXPLOSER';
+    this.classList.toggle('on',exploded);
+    allGroups.forEach(function(g,i){ var p=exploded?explodePos[i]:origPos[i]; g.position.set(p.x,p.y,p.z); });
+  });
+
+  [0,1,2,3,4].forEach(function(i){
+    document.getElementById('tm'+i).addEventListener('click', function(){
+      allGroups[i].visible=!allGroups[i].visible;
+      this.classList.toggle('off',!allGroups[i].visible);
+    });
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    if(autoRot) tTheta+=0.004;
+    theta  += (tTheta-theta)  * 0.07;
+    phi    += (tPhi-phi)      * 0.07;
+    radius += (tRadius-radius)* 0.08;
+    camTgt.x += (tTgt.x-camTgt.x)*0.08;
+    camTgt.y += (tTgt.y-camTgt.y)*0.08;
+    camTgt.z += (tTgt.z-camTgt.z)*0.08;
+    camera.position.set(
+      camTgt.x + radius*Math.sin(theta)*Math.cos(phi),
+      camTgt.y + radius*Math.sin(phi),
+      camTgt.z + radius*Math.cos(theta)*Math.cos(phi)
+    );
+    camera.lookAt(camTgt.x, camTgt.y, camTgt.z);
+    renderer.render(scene, camera);
+  }
+  animate();
+
+}); // DOMContentLoaded
+</script>
+</body>
+</html>
